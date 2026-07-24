@@ -1,98 +1,221 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
-  }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
-  return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
-  );
-}
+import { Ionicons } from "@expo/vector-icons";
+import { useState } from "react";
+import {
+  Image,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 
 export default function HomeScreen() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
+    <View style={styles.container}>
+      {/* Logo */}
+      <Text style={styles.logo}>SEMESTR</Text>
 
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
-
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
+      {/* Email */}
+        <View style={{ marginBottom: 20 }}>
+          <TextInput
+            placeholder="Email"
+            placeholderTextColor="#999"
+            style={styles.input}
+            value={email}
+            onChangeText={setEmail}
           />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
+        </View>
 
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
+      {/* Password */}
+      <View style={styles.passwordWrapper}>
+        <TextInput
+          placeholder="Password"
+          placeholderTextColor="#999"
+          secureTextEntry={!showPassword}
+          style={styles.input}
+          value={password}
+          onChangeText={setPassword}
+        />
+
+        <Pressable
+          style={styles.eyeButton}
+          onPress={() => setShowPassword(!showPassword)}
+        >
+          <Ionicons
+            name={showPassword ? "eye-off-outline" : "eye-outline"}
+            size={22}
+            color="#777"
+          />
+        </Pressable>
+      </View>
+      {/* Forgot Password */}
+      <Pressable onPress={() => alert("Forgot Password")}>
+        <Text style={styles.forgot}>Forgot Password?</Text>
+      </Pressable>
+
+      {/* Login Button */}
+      <Pressable
+        style={styles.button}
+        onPress={() => alert("Login Clicked")}
+      >
+        <Text style={styles.buttonText}>LOGIN</Text>
+      </Pressable>
+
+      {/* OR Divider */}
+      <View style={styles.orContainer}>
+        <View style={styles.line} />
+        <Text style={styles.orText}>OR</Text>
+        <View style={styles.line} />
+      </View>
+
+      {/* Google Button */}
+      <Pressable
+        style={styles.googleButton}
+        onPress={() => alert("Google Login")}
+      >
+        <View style={styles.googleContent}>
+          <Image
+            source={require("../../assets/images/google.png")}
+            style={styles.googleLogo}
+          />
+
+          <Text style={styles.googleText}>
+            Continue with Google
+          </Text>
+        </View>
+      </Pressable>
+
+      {/* Sign Up */}
+      <Pressable onPress={() => alert("Create Account")}>
+        <Text style={styles.signup}>
+          Create an Account
+        </Text>
+      </Pressable>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
+    backgroundColor: "#FFFFFF",
+    justifyContent: "center",
+    paddingHorizontal: 30,
   },
-  safeArea: {
+
+  logo: {
+    fontSize: 38,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 50,
+    letterSpacing: 2,
+  },
+
+  input: {
+    height: 56,
+    borderWidth: 1,
+    borderColor: "#D9D9D9",
+    borderRadius: 12,
+    backgroundColor: "#FAFAFA",
+    paddingHorizontal: 15,
+    paddingRight: 50,
+    fontSize: 16,
+  },
+
+  passwordWrapper: {
+    position: "relative",
+    marginBottom: 20,
+  },
+
+  eyeButton: {
+    position: "absolute",
+    right: 15,
+    top: 0,
+    width: 40,
+    height: 56,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  forgot: {
+    textAlign: "right",
+    color: "#4F46E5",
+    marginBottom: 30,
+    fontWeight: "500",
+  },
+
+  button: {
+    backgroundColor: "#4F46E5",
+    paddingVertical: 17,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+
+  buttonText: {
+    color: "#FFFFFF",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+
+  orContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 30,
+  },
+
+  line: {
     flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
+    height: 1,
+    backgroundColor: "#D9D9D9",
   },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
+
+  orText: {
+    marginHorizontal: 15,
+    color: "#777",
+    fontWeight: "600",
   },
-  title: {
-    textAlign: 'center',
+
+  googleButton: 
+  {
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#DADCE0",
+    borderRadius: 12,
+    height: 56,
+    justifyContent: "center",
+    alignItems: "center",
   },
-  code: {
-    textTransform: 'uppercase',
+
+  googleContent: 
+  {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
   },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
+
+  googleLogo: 
+  {
+    width: 22,
+    height: 22,
+    resizeMode: "contain",
   },
-});
+
+  googleText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#3C4043",
+  },
+
+  signup: {
+    textAlign: "center",
+    marginTop: 35,
+    color: "#4F46E5",
+    fontWeight: "600",
+    fontSize: 15,
+  },
+}); 
