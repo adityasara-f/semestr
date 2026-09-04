@@ -43,6 +43,13 @@ export function useGoogleAuth() {
     setState({ status: "loading" });
 
     try {
+      // Clear any cached session so Google always prompts the account chooser on Android
+      try {
+        await GoogleSignin.signOut();
+      } catch {
+        // Ignore if no active session
+      }
+
       // Ensure Google Play Services are available (Android only; no-op on iOS).
       await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
 
@@ -50,16 +57,18 @@ export function useGoogleAuth() {
 
       if (response.type === "cancelled") {
         // User dismissed the account picker — not an error.
+        console.log("Google Sign-In: Cancelled by user");
         setState({ status: "cancelled" });
         return;
       }
 
       // response.type === "success"
       const { user, idToken } = response.data;
+      console.log("Google Sign-In Success:", { email: user.email, name: user.name, idToken: idToken ? "present" : "null" });
 
       setState({
         status: "success",
-        user: user.user,
+        user,
         idToken,
       });
 
@@ -77,6 +86,12 @@ export function useGoogleAuth() {
       //     router.replace("/(tabs)/home");
       // -----------------------------------------------------------------------
     } catch (error: any) {
+      console.error("Google Sign-In Error:", {
+        code: error.code,
+        message: error.message,
+        error,
+      });
+
       if (error.code === statusCodes.IN_PROGRESS) {
         // Another sign-in is already in progress — silently ignore.
         setState({ status: "idle" });
@@ -88,14 +103,23 @@ export function useGoogleAuth() {
       } else {
         setState({
           status: "error",
-          message: error.message ?? "An unknown error occurred during sign-in.",
+          message: error.message ?? `Sign-in failed (code: ${error.code ?? "unknown"}).`,
         });
       }
     }
   }, []);
 
+  const signOut = useCallback(async () => {
+    try {
+      await GoogleSignin.signOut();
+    } catch (e) {
+      console.error("Error signing out:", e);
+    }
+    setState({ status: "idle" });
+  }, []);
+
   /** Resets state back to idle (e.g. to clear an error banner). */
   const reset = useCallback(() => setState({ status: "idle" }), []);
 
-  return { state, signIn, reset };
+  return { state, signIn, signOut, reset };
 }

@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Image,
   Pressable,
   StyleSheet,
@@ -9,15 +10,35 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { useRouter } from "expo-router";
 import { useGoogleAuth } from "@/hooks/use-google-auth";
 
 export default function HomeScreen() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
   const { state: googleState, signIn: signInWithGoogle } = useGoogleAuth();
   const isGoogleLoading = googleState.status === "loading";
+
+  useEffect(() => {
+    if (googleState.status === "success") {
+      router.replace({
+        pathname: "/home",
+        params: {
+          name: googleState.user.name ?? "",
+          email: googleState.user.email,
+          photo: googleState.user.photo ?? "",
+        },
+      });
+    } else if (googleState.status === "error") {
+      Alert.alert(
+        "Google Sign-In Failed",
+        googleState.message
+      );
+    }
+  }, [googleState, router]);
 
   return (
     <View style={styles.container}>
