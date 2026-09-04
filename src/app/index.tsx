@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
+  ActivityIndicator,
   Image,
   Pressable,
   StyleSheet,
@@ -8,11 +9,15 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { useGoogleAuth } from "@/hooks/use-google-auth";
 
 export default function HomeScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+
+  const { state: googleState, signIn: signInWithGoogle } = useGoogleAuth();
+  const isGoogleLoading = googleState.status === "loading";
 
   return (
     <View style={styles.container}>
@@ -74,17 +79,21 @@ export default function HomeScreen() {
 
       {/* Google Button */}
       <Pressable
-        style={styles.googleButton}
-        onPress={() => alert("Google Login")}
+        style={[styles.googleButton, isGoogleLoading && styles.googleButtonDisabled]}
+        onPress={signInWithGoogle}
+        disabled={isGoogleLoading}
       >
         <View style={styles.googleContent}>
-          <Image
-            source={require("../../assets/images/google.png")}
-            style={styles.googleLogo}
-          />
-
+          {isGoogleLoading ? (
+            <ActivityIndicator size="small" color="#777" />
+          ) : (
+            <Image
+              source={require("../../assets/images/google.png")}
+              style={styles.googleLogo}
+            />
+          )}
           <Text style={styles.googleText}>
-            Continue with Google
+            {isGoogleLoading ? "Signing in..." : "Continue with Google"}
           </Text>
         </View>
       </Pressable>
@@ -203,6 +212,10 @@ const styles = StyleSheet.create({
     width: 22,
     height: 22,
     resizeMode: "contain",
+  },
+
+  googleButtonDisabled: {
+    opacity: 0.6,
   },
 
   googleText: {
