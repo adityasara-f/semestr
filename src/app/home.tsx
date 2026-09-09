@@ -1,16 +1,40 @@
-import { Ionicons } from "@expo/vector-icons";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import React, { useState } from "react";
+import {
+  Alert,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-export default function HomeScreen() {
+import { AiCard } from "@/components/dashboard/ai-card";
+import { DashboardHeader } from "@/components/dashboard/dashboard-header";
+import { DashboardTabBar, TabKey } from "@/components/dashboard/dashboard-tab-bar";
+import { HeroBanner } from "@/components/dashboard/hero-banner";
+import { RecentCheckins } from "@/components/dashboard/recent-checkins";
+import { StatsRow } from "@/components/dashboard/stats-row";
+import { TodayClasses } from "@/components/dashboard/today-classes";
+import { UpcomingTasks } from "@/components/dashboard/upcoming-tasks";
+import {
+  MOCK_CHECKINS,
+  MOCK_CLASSES,
+  MOCK_STATS,
+  MOCK_TASKS,
+  TaskItem,
+} from "@/constants/dashboard-mock-data";
+
+export default function DashboardScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{
     name?: string;
     email?: string;
     photo?: string;
   }>();
+
+  const [activeTab, setActiveTab] = useState<TabKey>("home");
 
   const handleSignOut = async () => {
     try {
@@ -21,184 +45,100 @@ export default function HomeScreen() {
     router.replace("/");
   };
 
+  const handleTaskPress = (task: TaskItem) => {
+    Alert.alert(task.title, `${task.type} for ${task.subject}\n${task.dueDate}`);
+  };
+
+  const handleAiAsk = (prompt: string) => {
+    Alert.alert("Semestr AI", `Query: "${prompt}"\n(AI Assistant processing...)`);
+  };
+
+  const handleViewTimetable = () => {
+    Alert.alert("Timetable", "Navigating to full semester timetable view.");
+  };
+
+  const handleTabSelect = (tab: TabKey) => {
+    setActiveTab(tab);
+    if (tab === "center") {
+      Alert.alert("Semestr AI", "Quick action menu activated.");
+    }
+  };
+
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-        {/* Header Badge */}
-        <View style={styles.badge}>
-          <Ionicons name="checkmark-circle" size={18} color="#0D9488" />
-          <Text style={styles.badgeText}>Google Authentication Verified</Text>
-        </View>
+    <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
+      <StatusBar barStyle="dark-content" backgroundColor="#F4EFEA" />
+      <View style={styles.container}>
+        {/* Top Header */}
+        <DashboardHeader
+          userName={params.name || "NEEHARIKA V RAO"}
+          userEmail={params.email}
+          userPhoto={params.photo}
+          studentId="25BCE0542"
+          onSignOut={handleSignOut}
+        />
 
-        {/* Profile Avatar */}
-        <View style={styles.avatarContainer}>
-          {params.photo ? (
-            <Image source={{ uri: params.photo }} style={styles.avatar} />
-          ) : (
-            <View style={styles.avatarPlaceholder}>
-              <Ionicons name="person" size={50} color="#64748B" />
-            </View>
-          )}
-        </View>
+        {/* Scrollable Dashboard Body */}
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Hero Banner ("READY TO CRUSH TODAY?") */}
+          <HeroBanner
+            greeting="Good morning 👋"
+            classesCount={4}
+            tasksDueCount={3}
+            dayNumber="09"
+            monthName="SEP"
+            weekdayName="Tue"
+          />
 
-        {/* User Information */}
-        <Text style={styles.welcomeText}>Welcome to Semestr!</Text>
-        <Text style={styles.nameText}>{params.name || "Authenticated User"}</Text>
-        <Text style={styles.emailText}>{params.email || "user@gmail.com"}</Text>
+          {/* Stats Row (Attendance 88%, GPA 8.4, Tasks Done 12/18) */}
+          <StatsRow stats={MOCK_STATS} />
 
-        {/* Card with details */}
-        <View style={styles.card}>
-          <View style={styles.row}>
-            <Ionicons name="mail-outline" size={20} color="#2563EB" />
-            <View style={styles.rowTextContainer}>
-              <Text style={styles.rowLabel}>Email Address</Text>
-              <Text style={styles.rowValue}>{params.email || "N/A"}</Text>
-            </View>
-          </View>
+          {/* Semestr AI Section */}
+          <AiCard onAsk={handleAiAsk} />
 
-          <View style={styles.divider} />
+          {/* Today's Classes */}
+          <TodayClasses
+            classes={MOCK_CLASSES}
+            onViewAll={handleViewTimetable}
+          />
 
-          <View style={styles.row}>
-            <Ionicons name="shield-checkmark-outline" size={20} color="#059669" />
-            <View style={styles.rowTextContainer}>
-              <Text style={styles.rowLabel}>Auth Provider</Text>
-              <Text style={styles.rowValue}>Google OAuth 2.0 (Live)</Text>
-            </View>
-          </View>
-        </View>
+          {/* Upcoming Tasks */}
+          <UpcomingTasks
+            tasks={MOCK_TASKS}
+            onTaskPress={handleTaskPress}
+          />
 
-        {/* Sign Out Button */}
-        <Pressable style={styles.signOutButton} onPress={handleSignOut}>
-          <Ionicons name="log-out-outline" size={20} color="#EF4444" />
-          <Text style={styles.signOutText}>Sign Out</Text>
-        </Pressable>
+          {/* Recent Check-ins */}
+          <RecentCheckins checkins={MOCK_CHECKINS} />
+        </ScrollView>
+
+        {/* Docked Custom Bottom Navigation Bar */}
+        <DashboardTabBar
+          activeTab={activeTab}
+          onSelectTab={handleTabSelect}
+        />
       </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#F4EFEA",
+  },
   container: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: "#F4EFEA",
   },
-  content: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 24,
-  },
-  badge: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#CCFBF1",
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 20,
-    marginBottom: 24,
-    gap: 6,
-  },
-  badgeText: {
-    color: "#0F766E",
-    fontWeight: "600",
-    fontSize: 13,
-  },
-  avatarContainer: {
-    marginBottom: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 4,
-  },
-  avatar: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    borderWidth: 3,
-    borderColor: "#FFFFFF",
-  },
-  avatarPlaceholder: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: "#E2E8F0",
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 3,
-    borderColor: "#FFFFFF",
-  },
-  welcomeText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#64748B",
-    textTransform: "uppercase",
-    letterSpacing: 1.2,
-    marginBottom: 4,
-  },
-  nameText: {
-    fontSize: 26,
-    fontWeight: "bold",
-    color: "#0F172A",
-    textAlign: "center",
-    marginBottom: 4,
-  },
-  emailText: {
-    fontSize: 15,
-    color: "#64748B",
-    marginBottom: 30,
-  },
-  card: {
-    width: "100%",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 28,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-    shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
-  },
-  rowTextContainer: {
+  scrollView: {
     flex: 1,
   },
-  rowLabel: {
-    fontSize: 12,
-    color: "#94A3B8",
-    fontWeight: "500",
-    marginBottom: 2,
-  },
-  rowValue: {
-    fontSize: 14,
-    color: "#1E293B",
-    fontWeight: "600",
-  },
-  divider: {
-    height: 1,
-    backgroundColor: "#F1F5F9",
-    marginVertical: 14,
-  },
-  signOutButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    width: "100%",
-    height: 52,
-    borderRadius: 12,
-    backgroundColor: "#FEE2E2",
-    gap: 8,
-  },
-  signOutText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#DC2626",
+  scrollContent: {
+    paddingTop: 4,
+    paddingBottom: 24,
   },
 });
